@@ -1,8 +1,8 @@
+from datetime import datetime
+
 class ReportPapper:
     def __init__(self):
-        self.head = 'FlytType;Amount\n'
-        self.amount = 0
-        self.line = f'Tephritidae;{0}'
+        self.head = 'FlytType;id;data\n'
     
 
     def Registrer(self):
@@ -12,10 +12,9 @@ class ReportPapper:
         except FileNotFoundError:
             with open('results.csv', 'w') as results:
                 results.write(self.head)
-                results.write(self.line)
 
-    def Update(self):
+    def Update(self, flys):
         with open('results.csv', 'w') as results:
-            self.line = f'Tephritidae;{self.amount}'
-            results.write(self.head)
-            results.write(self.line)
+            for fly in flys:
+                line = f'MoscaFruta;{fly[0]};{fly[-1]}'
+                results.write(line)

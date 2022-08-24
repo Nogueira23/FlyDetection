@@ -1,8 +1,10 @@
+from datetime import datetime
 import cv2
+import numpy
 import PapperResults
 
 def selectROIfromFrame(frame):
-    box = cv2.selectROI('Select ROI', frame, fromCenter=False, showCrosshair=False)
+    box = cv2.selectROI('Select ROI', frame, fromCenter=True, showCrosshair=False)
     return box
 
 #Obeject Detection From Stable Camera
@@ -21,6 +23,7 @@ tracker = cv2.TrackerCSRT_create()
 modelo = tracker.init(select_frame, box)
 
 flys = []
+#flys -- id, width, BoolIn, BoolOut
 Report = PapperResults.ReportPapper()
 Report.Registrer()
 
@@ -41,20 +44,25 @@ while cap.isOpened():
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     ok, box = tracker.update(mask)
+    print(box)
 
     if 0 < box[1] <= box[3]:
         if len(flys) == 0:
-            flys.append([1, box[3], True, False])
+            now = datetime.now()
+            date = f'{now.day}/{now.month}/{now.year}({now.hour}:{now.minute}:{now.second})'
+            flys.append([1, box[3], True, False, date])
         else:
             for fly in flys:
-                if fly[1] - box[3] <= 3:
+                if fly[1] - box[3] <= 2:
                     continue
                 else:
+                    #new id
                     aux = flys[-1][0] + 1
-                    flys.append([aux, box[3], True, False])
+                    date = datetime.now()
+                    flys.append([aux, box[3], True, False, date])
     if box[1] >= heigth - box[3]:
         for fly in flys:
-            if fly[1] - box[3] <= 3:
+            if fly[1] - box[3] <= 2:
                 fly[3] = True
     
     """for cnt in contours:
@@ -75,15 +83,16 @@ while cap.isOpened():
         if fly[2] and fly[3]:
             Report.amount += 1
             fly[2], fly[3] = False, False
-
-    Report.Update()
     
 
     cv2.imshow("Fly Detection", frame)
+    cv2.imshow("mask video", mask)
 
     key = cv2.waitKey(60)
     if key == 27:
         break
 
+Report.Update(flys)
+flys.clear()
 cap.release()
 cv2.destroyAllWindows()
